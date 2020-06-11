@@ -176,7 +176,7 @@ class FrameworkExtension extends Extension
         $loader->load('web.xml');
         $loader->load('services.xml');
         $loader->load('fragment_renderer.xml');
-        $loader->load('error_renderer.xml');
+        $phpLoader->load('error_renderer.php');
 
         if (interface_exists(PsrEventDispatcherInterface::class)) {
             $container->setAlias(PsrEventDispatcherInterface::class, 'event_dispatcher');
@@ -375,7 +375,7 @@ class FrameworkExtension extends Extension
         $this->registerRouterConfiguration($config['router'], $container, $loader, $config['translator']['enabled_locales'] ?? []);
         $this->registerAnnotationsConfiguration($config['annotations'], $container, $loader);
         $this->registerPropertyAccessConfiguration($config['property_access'], $container, $loader);
-        $this->registerSecretsConfiguration($config['secrets'], $container, $loader);
+        $this->registerSecretsConfiguration($config['secrets'], $container, $phpLoader);
 
         if ($this->isConfigEnabled($container, $config['serializer'])) {
             if (!class_exists('Symfony\Component\Serializer\Serializer')) {
@@ -386,7 +386,7 @@ class FrameworkExtension extends Extension
         }
 
         if ($propertyInfoEnabled) {
-            $this->registerPropertyInfoConfiguration($container, $loader);
+            $this->registerPropertyInfoConfiguration($container, $phpLoader);
         }
 
         if ($this->isConfigEnabled($container, $config['lock'])) {
@@ -410,7 +410,7 @@ class FrameworkExtension extends Extension
         ]);
 
         if (class_exists(MimeTypes::class)) {
-            $loader->load('mime_type.xml');
+            $phpLoader->load('mime_type.php');
         }
 
         $container->registerForAutoconfiguration(Command::class)
@@ -1399,7 +1399,7 @@ class FrameworkExtension extends Extension
         ;
     }
 
-    private function registerSecretsConfiguration(array $config, ContainerBuilder $container, XmlFileLoader $loader)
+    private function registerSecretsConfiguration(array $config, ContainerBuilder $container, PhpFileLoader $loader)
     {
         if (!$this->isConfigEnabled($container, $config)) {
             $container->removeDefinition('console.command.secrets_set');
@@ -1412,7 +1412,7 @@ class FrameworkExtension extends Extension
             return;
         }
 
-        $loader->load('secrets.xml');
+        $loader->load('secrets.php');
 
         $container->getDefinition('secrets.vault')->replaceArgument(0, $config['vault_directory']);
 
@@ -1548,13 +1548,13 @@ class FrameworkExtension extends Extension
         }
     }
 
-    private function registerPropertyInfoConfiguration(ContainerBuilder $container, XmlFileLoader $loader)
+    private function registerPropertyInfoConfiguration(ContainerBuilder $container, PhpFileLoader $loader)
     {
         if (!interface_exists(PropertyInfoExtractorInterface::class)) {
             throw new LogicException('PropertyInfo support cannot be enabled as the PropertyInfo component is not installed. Try running "composer require symfony/property-info".');
         }
 
-        $loader->load('property_info.xml');
+        $loader->load('property_info.php');
 
         if (interface_exists('phpDocumentor\Reflection\DocBlockFactoryInterface')) {
             $definition = $container->register('property_info.php_doc_extractor', 'Symfony\Component\PropertyInfo\Extractor\PhpDocExtractor');
